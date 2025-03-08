@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
 
-def get_request_params(param, default=None):
+def get_flatrequest_params(param, default=None):
     request_json = request.get_json(silent=True)
     request_args = request.args
 
@@ -15,11 +15,23 @@ def get_request_params(param, default=None):
 
 @app.route("/greetings", methods=["GET", "POST"])
 def handler_greetings():
-    name = get_request_params("name")
-    response_json = {"greetings": f"Hello {name}"} # Create a dictionary
-    return jsonify(response_json) # Return JSON response using jsonify
+    name = get_flatrequest_params("name")
+    greetings_response = {"greetings": f"Hello {name}"} 
+    return jsonify(greetings_response)
+
+@app.route("/getcustomerprofile", methods=["GET", "POST"])
+def getcustomerprofile():
+    customerprofile_response = {
+        "fname": "Shanky",
+        "prepaidmobile": "60000001",
+        "postpaidmobile": "60000002"
+    } 
+    return jsonify(customerprofile_response)
 
 @functions_framework.http
 def main(request):
     with app.request_context(request.environ):
         return app.full_dispatch_request()
+    
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=8080)    
