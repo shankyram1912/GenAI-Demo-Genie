@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify
 import logging
 
 from mockresponses import customerprofile_response, balances_response, plans_response, bundles_response
+from agent_faqwifi import faqsearch_homewifi
 
 logging.basicConfig(level=logging.INFO)
 
@@ -76,30 +77,16 @@ def handler_dfcx_webhook():
                 webhook_response = {"sessionInfo": user_session_obj}
 
             if webhook_tag == "getacctplans":
-                # webhook_response = {
-                #     "fulfillmentResponse": {
-                #         "messages": [
-                #             {
-                #                 "payload": plans_response
-                #             }
-                #         ]
-                #     }
-                # }
                 user_session_obj["parameters"]["webhook_response"] = plans_response
                 webhook_response = {"sessionInfo": user_session_obj}  
 
             if webhook_tag == "getacctbundles":
-                # webhook_response = {
-                #     "fulfillmentResponse": {
-                #         "messages": [
-                #             {
-                #                 "payload": bundles_response
-                #             }
-                #         ]
-                #     }
-                # }
                 user_session_obj["parameters"]["webhook_response"] = bundles_response
-                webhook_response = {"sessionInfo": user_session_obj}                                                   
+                webhook_response = {"sessionInfo": user_session_obj} 
+
+            if webhook_tag == "faqhomewifi":
+                user_session_obj["parameters"]["webhook_response"] = "Search result to come..."
+                webhook_response = {"sessionInfo": user_session_obj}                                                                   
 
         else:
             logging.error(f"Webhook request tag MISSING")

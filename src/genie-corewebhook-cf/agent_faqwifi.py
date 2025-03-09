@@ -1,5 +1,3 @@
-# @title Import Required Packages
-
 # Import libraries
 from google.api_core.client_options import ClientOptions
 from google.cloud import discoveryengine_v1 as discoveryengine
@@ -9,9 +7,7 @@ project_id = "genai-e2e-demos"
 location = "global" # Values: "global", "us", "eu"
 engine_id = "globe-faq-search-homewifi_1741224854099"
 
-# @title Answer Query Function
-
-def answer_query_sample(
+def answer_query_homewifi(
     project_id: str,
     location: str,
     engine_id: str,
@@ -84,9 +80,5 @@ def answer_query_sample(
     if(verbose): print(response)
     return response
 	
-# @title Main Program
-
-user_query = "what is razer gold ?"
-answer_text = answer_query_sample(project_id, location, engine_id, user_query).answer.answer_text
-
-print(answer_text)	
+def faqsearch_homewifi(user_query: str) -> str:
+    return answer_query_homewifi(project_id, location, engine_id, user_query).answer.answer_text	
