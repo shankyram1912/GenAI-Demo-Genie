@@ -81,4 +81,4 @@ def answer_query_homewifi(
     return response
 	
 def faqsearch_homewifi(user_query: str) -> str:
-    return answer_query_homewifi(project_id, location, engine_id, user_query).answer.answer_text	
+    return answer_query_homewifi(project_id, location, engine_id, user_query).answer.answer_text

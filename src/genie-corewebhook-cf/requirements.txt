@@ -1,3 +1,2 @@
 functions-framework==3.*
-flask
-google-cloud-discoveryengine=0.13.6
+google-cloud-discoveryengine==0.13.6
