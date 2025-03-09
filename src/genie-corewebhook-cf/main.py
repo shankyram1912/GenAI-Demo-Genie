@@ -2,7 +2,7 @@ import functions_framework
 from flask import Flask, request, jsonify
 import logging
 
-from mockresponses import customerprofile_response
+from mockresponses import customerprofile_response, balances_response, plans_response, bundles_response
 
 logging.basicConfig(level=logging.INFO)
 
@@ -48,17 +48,58 @@ def handler_dfcx_webhook():
     webhook_response = ""
 
     if request:
-        webhook_tag = request_body["fulfillmentInfo"]["tag"]
         user_session_obj = request_body["sessionInfo"]
+        fulfillment_info_obj = request_body["fulfillmentInfo"]
+
+        webhook_tag = fulfillment_info_obj["tag"]
 
         if webhook_tag:
             logging.info(f"Webhook request tag - {webhook_tag}")
 
             if webhook_tag == "getcustomerprofile":
                 user_session_obj["parameters"]["customer_fname"] = customerprofile_response["customer_fname"]
-                user_session_obj["parameters"]["customer_prepaidmobile"] = customerprofile_response["customer_prepaidmobile"]
                 user_session_obj["parameters"]["customer_postpaidmobile"] = customerprofile_response["customer_postpaidmobile"]
+                user_session_obj["parameters"]["customer_billingacct"] = customerprofile_response["customer_billingacct"]
                 webhook_response = {"sessionInfo": user_session_obj}
+
+            if webhook_tag == "getacctbalances":
+                # webhook_response = {
+                #     "fulfillmentResponse": {
+                #         "messages": [
+                #             {
+                #                 "payload": balances_response
+                #             }
+                #         ]
+                #     }
+                # }
+                user_session_obj["parameters"]["webhook_response"] = balances_response
+                webhook_response = {"sessionInfo": user_session_obj}
+
+            if webhook_tag == "getacctplans":
+                # webhook_response = {
+                #     "fulfillmentResponse": {
+                #         "messages": [
+                #             {
+                #                 "payload": plans_response
+                #             }
+                #         ]
+                #     }
+                # }
+                user_session_obj["parameters"]["webhook_response"] = plans_response
+                webhook_response = {"sessionInfo": user_session_obj}  
+
+            if webhook_tag == "getacctbundles":
+                # webhook_response = {
+                #     "fulfillmentResponse": {
+                #         "messages": [
+                #             {
+                #                 "payload": bundles_response
+                #             }
+                #         ]
+                #     }
+                # }
+                user_session_obj["parameters"]["webhook_response"] = bundles_response
+                webhook_response = {"sessionInfo": user_session_obj}                                                   
 
         else:
             logging.error(f"Webhook request tag MISSING")
@@ -69,6 +110,7 @@ def handler_dfcx_webhook():
 
     logresponse("DFCX Webhook", webhook_response)
     return webhook_response        
+
 
 # Cloud Function entry point
 @functions_framework.http
