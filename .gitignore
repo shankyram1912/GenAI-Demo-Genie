@@ -1,2 +1,3 @@
 # Ignore all zip files in any subdirectory
 **/*.zip
+__pycache__/
