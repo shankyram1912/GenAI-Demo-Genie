@@ -1,10 +1,12 @@
 import functions_framework
-import json
-import logging
 from flask import Flask, request, jsonify
+import logging
+
+from mockresponses import customerprofile_response
 
 logging.basicConfig(level=logging.INFO)
 
+# Create a Flask app
 app = Flask(__name__)
 
 def get_flatrequest_params(param, default=None):
@@ -13,25 +15,87 @@ def get_flatrequest_params(param, default=None):
 
     return (request_json or {}).get(param, default) or request_args.get(param, default)
 
+def logrequest(operation: str, request):
+    logging.info(f"{operation} API REQUEST - ... {request}; Body - {request.get_json(silent=True)} ... END")
+
+def logresponse(operation: str, response: str):
+    logging.info(f"{operation} API RESPONSE - ... {response} ... END") 
+
+# Define a route with Flask
 @app.route("/greetings", methods=["GET", "POST"])
 def handler_greetings():
+    logrequest("Greetings", request)
     name = get_flatrequest_params("name")
-    greetings_response = {"greetings": f"Hello {name}"} 
-    return jsonify(greetings_response)
+    if name:
+        greetings_response = {"greetings": f"Hello {name}"}
+    else:
+        # greetings_response = jsonify({'error': 'Missing name field'}), 400
+        greetings_response = {"greetings": "Hello Developer"}
+    logresponse("Greetings", greetings_response)    
+    return greetings_response
 
 @app.route("/getcustomerprofile", methods=["GET", "POST"])
-def getcustomerprofile():
-    customerprofile_response = {
-        "fname": "Shanky",
-        "prepaidmobile": "60000001",
-        "postpaidmobile": "60000002"
-    } 
-    return jsonify(customerprofile_response)
+def handler_getcustomerprofile():
+    logrequest("Getcustomerprofile", request)
+    logresponse("Getcustomerprofile", customerprofile_response)
+    return customerprofile_response
 
+@app.route("/webhook", methods=["GET", "POST"])
+def handler_dfcx_webhook():
+    logrequest("DFCX Webhook", request)
+
+    request_body = request.get_json()
+    webhook_response = ""
+
+    if request:
+        webhook_tag = request_body["fulfillmentInfo"]["tag"]
+        user_session_obj = request_body["sessionInfo"]
+
+        if webhook_tag:
+            logging.info(f"Webhook request tag - {webhook_tag}")
+
+            if webhook_tag == "getcustomerprofile":
+                user_session_obj["parameters"]["customer_fname"] = customerprofile_response["customer_fname"]
+                user_session_obj["parameters"]["customer_prepaidmobile"] = customerprofile_response["customer_prepaidmobile"]
+                user_session_obj["parameters"]["customer_postpaidmobile"] = customerprofile_response["customer_postpaidmobile"]
+                webhook_response = {"sessionInfo": user_session_obj}
+
+        else:
+            logging.error(f"Webhook request tag MISSING")
+            webhook_response = jsonify({'error': 'Missing Webhook tag field'}), 400
+    else:
+        logging.error(f"Webhook request MISSING")
+        webhook_response = jsonify({'error': 'Missing Webhook request body'}), 400
+
+    logresponse("DFCX Webhook", webhook_response)
+    return webhook_response        
+
+# Cloud Function entry point
 @functions_framework.http
 def main(request):
-    with app.request_context(request.environ):
-        return app.full_dispatch_request()
+    """HTTP Cloud Function that serves a Flask app with
+    a greeting endpoint at /greetings.
+    """
+    # # Handle CORS for preflight requests
+    # if request.method == 'OPTIONS':
+    #     headers = {
+    #         'Access-Control-Allow-Origin': '*',
+    #         'Access-Control-Allow-Methods': 'POST',
+    #         'Access-Control-Allow-Headers': 'Content-Type',
+    #         'Access-Control-Max-Age': '3600'
+    #     }
+    #     return ('', 204, headers)
     
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=8080)    
+    # # Set CORS headers for the main request
+    # headers = {'Access-Control-Allow-Origin': '*'}
+    
+    # Create a context for the Flask app with the current request
+    with app.request_context(request.environ):
+        # Process the request with Flask
+        response = app.full_dispatch_request()
+    
+    # # Add CORS headers to the response
+    # for key, value in headers.items():
+    #     response.headers[key] = value
+    
+    return response
