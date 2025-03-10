@@ -50,6 +50,7 @@ def handler_dfcx_webhook():
 
     if request:
         user_session_obj = request_body["sessionInfo"]
+        dfcx_session = user_session_obj["session"]
         fulfillment_info_obj = request_body["fulfillmentInfo"]
         user_text = request_body["text"]
 
@@ -86,7 +87,7 @@ def handler_dfcx_webhook():
                 webhook_response = {"sessionInfo": user_session_obj} 
 
             if webhook_tag == "faqhomewifi":
-                user_session_obj["parameters"]["webhook_response"] = faqsearch_homewifi(user_text)
+                user_session_obj["parameters"]["webhook_response"] = faqsearch_homewifi(user_text, dfcx_session)
                 webhook_response = {"sessionInfo": user_session_obj}                                                                   
 
         else:
