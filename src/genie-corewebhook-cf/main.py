@@ -87,6 +87,14 @@ def handler_dfcx_webhook():
                 webhook_response = {"sessionInfo": user_session_obj} 
 
             if webhook_tag == "faqhomewifi":
+                
+                user_turn = 0
+                if "faqhomewifi_userturn" in user_session_obj["parameters"]:
+                    user_turn = user_session_obj["faqhomewifi_userturn"]
+                else:
+                    user_turn = user_turn + 1
+                user_session_obj["faqhomewifi_userturn"] = user_turn                
+                
                 user_session_obj["parameters"]["webhook_response"] = faqsearch_homewifi(user_text, dfcx_session)
                 webhook_response = {"sessionInfo": user_session_obj}                                                                   
 
